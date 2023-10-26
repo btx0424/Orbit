@@ -1,6 +1,63 @@
 Changelog
 ---------
 
+0.9.20 (2023-10-03)
+~~~~~~~~~~~~~~~~~~~
+
+Fixed
+^^^^^
+
+* Changed naming in :class:`omni.isaac.orbit.sim.SimulationContext.RenderMode` to use ``NO_GUI_OR_RENDERING``
+  and ``NO_RENDERING`` instead of ``HEADLESS`` for clarity.
+* Changed :class:`omni.isaac.orbit.sim.SimulationContext` to be capable of handling livestreaming and
+  offscreen rendering.
+* Changed :class:`omni.isaac.orbit.app.AppLauncher` envvar ``VIEWPORT_RECORD`` to the more descriptive
+  ``OFFSCREEN_RENDER``.
+
+
+0.9.19 (2023-10-25)
+~~~~~~~~~~~~~~~~~~~
+
+Added
+^^^^^
+
+* Added Gym observation and action spaces for the :class:`omni.isaac.orbit.envs.RLEnv` class.
+
+
+0.9.18 (2023-10-19)
+~~~~~~~~~~~~~~~~~~
+
+Added
+^^^^^
+
+* Created :class:`omni.issac.orbit.sim.converters.asset_converter.AssetConverter` to serve as a base
+  class for all asset converters.
+* Added :class:`omni.issac.orbit.sim.converters.mesh_converter.MeshConverter` to handle loading and conversion
+  of mesh files (OBJ, STL and FBX) into USD format.
+* Added script `convert_mesh.py` to ``source/tools`` to allow users to convert a mesh to USD via command line arguments.
+
+Changed
+^^^^^^^
+
+* Renamed the submodule :mod:`omni.isaac.orbit.sim.loaders` to :mod:`omni.isaac.orbit.sim.converters` to be more
+  general with the functionality of the module.
+* Updated `check_instanceable.py` script to convert relative paths to absolute paths.
+
+
+0.9.17 (2023-10-22)
+~~~~~~~~~~~~~~~~~~~
+
+Added
+^^^^^
+
+* Added setters and getters for term configurations in the :class:`RandomizationManager`, :class:`RewardManager`
+  and :class:`TerminationManager` classes. This allows the user to modify the term configurations after the
+  manager has been created.
+* Added the method :meth:`compute_group` to the :class:`omni.isaac.orbit.managers.ObservationManager` class to
+  compute the observations for only a given group.
+* Added the curriculum term for modifying reward weights after certain environment steps.
+
+
 0.9.16 (2023-10-22)
 ~~~~~~~~~~~~~~~~~~~
 
@@ -130,6 +187,8 @@ Fixed
 * Fixed the boundedness of class objects that register callbacks into the simulator.
   These include devices, :class:`AssetBase`, :class:`SensorBase` and :class:`CommandGenerator`.
   The fix ensures that object gets deleted when the user deletes the object.
+
+
 0.9.7 (2023-09-26)
 ~~~~~~~~~~~~~~~~~~
 
