@@ -236,8 +236,16 @@ def clone(func: Callable) -> Callable:
                 sem.GetSemanticTypeAttr().Set(semantic_type)
                 sem.GetSemanticDataAttr().Set(semantic_value)
         # activate rigid body contact sensors
-        if hasattr(cfg, "activate_contact_sensors") and cfg.activate_contact_sensors:
-            schemas.activate_contact_sensors(prim_paths[0], cfg.activate_contact_sensors)
+        if hasattr(cfg, "activate_contact_sensors"):
+            activate_contact_sensors = cfg.activate_contact_sensors
+            if isinstance(activate_contact_sensors, str):
+                activate_paths = prim_utils.find_matching_prim_paths(f"{prim_paths[0]}/{activate_contact_sensors}")
+            elif isinstance(activate_contact_sensors, bool):
+                activate_paths = [prim_paths[0]] if activate_contact_sensors else []
+            else:
+                raise ValueError
+            for activate_path in activate_paths:
+                schemas.activate_contact_sensors(activate_path, 1.)
         # clone asset using cloner API
         if len(prim_paths) > 1:
             cloner = Cloner()
