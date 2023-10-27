@@ -1,6 +1,28 @@
 Changelog
 ---------
 
+0.9.24 (2023-10-27)
+~~~~~~~~~~~~~~~~~~~
+
+Changed
+^^^^^^^
+
+* Changed the behavior of setting up debug visualization for assets, sensors and command generators.
+  Earlier it was raising an error if debug visualization was not enabled in the configuration object.
+  Now it checks whether debug visualization is implemented and only sets up the callback if it is
+  implemented.
+
+
+0.9.23 (2023-10-27)
+~~~~~~~~~~~~~~~~~~~
+
+Fixed
+^^^^^
+
+* Fixed a typo in the :class:`AssetBase` and :class:`SensorBase` that effected the class destructor.
+  Earlier, a tuple was being created in the constructor instead of the actual object.
+
+
 0.9.22 (2023-10-26)
 ~~~~~~~~~~~~~~~~~~~
 
