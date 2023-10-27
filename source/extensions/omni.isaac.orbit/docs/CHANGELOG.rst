@@ -1,7 +1,37 @@
 Changelog
 ---------
 
-0.9.20 (2023-10-03)
+0.9.22 (2023-10-26)
+~~~~~~~~~~~~~~~~~~~
+
+Added
+^^^^^
+
+* Added a :class:`omni.isaac.orbit.command_generators.NullCommandGenerator` class for no command environments.
+  This is easier to work with than having checks for :obj:`None` in the command generator.
+
+Fixed
+^^^^^
+
+* Moved the randomization manager to the :class:`omni.isaac.orbit.envs.BaseEnv` class with the default
+  settings to reset the scene to the defaults specified in the configurations of assets.
+* Moved command generator to the :class:`omni.isaac.orbit.envs.RlEnv` class to have all task-specification
+  related classes in the same place.
+
+
+0.9.21 (2023-10-26)
+~~~~~~~~~~~~~~~~~~~
+
+Fixed
+^^^^^
+
+* Decreased the priority of callbacks in asset and sensor base classes. This may help in preventing
+  crashes when warm starting the simulation.
+* Fixed no rendering mode when running the environment from the GUI. Earlier the function
+  :meth:`SimulationContext.set_render_mode` was erroring out.
+
+
+0.9.20 (2023-10-25)
 ~~~~~~~~~~~~~~~~~~~
 
 Fixed
@@ -24,8 +54,8 @@ Added
 * Added Gym observation and action spaces for the :class:`omni.isaac.orbit.envs.RLEnv` class.
 
 
-0.9.18 (2023-10-19)
-~~~~~~~~~~~~~~~~~~
+0.9.18 (2023-10-23)
+~~~~~~~~~~~~~~~~~~~
 
 Added
 ^^^^^
@@ -739,7 +769,7 @@ Changed
 Added
 ^^^^^
 
-* Added a helper class :class:`omni.isaac.orbit.asset_loader.UrdfLoader` that coverts a URDF file to instanceable USD
+* Added a helper class :class:`omni.isaac.orbit.asset_loader.UrdfLoader` that converts a URDF file to instanceable USD
   file based on the input configuration object.
 
 
