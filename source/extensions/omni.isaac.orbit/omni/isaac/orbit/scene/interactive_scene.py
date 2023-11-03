@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES, ETH Zurich, and University of Toronto
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -19,7 +19,7 @@ from omni.isaac.version import get_version
 from pxr import PhysxSchema
 
 from omni.isaac.orbit.assets import Articulation, ArticulationCfg, AssetBaseCfg, RigidObject, RigidObjectCfg
-from omni.isaac.orbit.sensors import SensorBase, SensorBaseCfg
+from omni.isaac.orbit.sensors import FrameTransformerCfg, SensorBase, SensorBaseCfg
 from omni.isaac.orbit.terrains import TerrainImporter, TerrainImporterCfg
 
 from .interactive_scene_cfg import InteractiveSceneCfg
@@ -327,7 +327,7 @@ class InteractiveScene:
         for asset_name, asset_cfg in self.cfg.__dict__.items():
             # skip keywords
             # note: easier than writing a list of keywords: [num_envs, env_spacing, lazy_sensor_update]
-            if asset_name in InteractiveSceneCfg.__dataclass_fields__:
+            if asset_name in InteractiveSceneCfg.__dataclass_fields__ or asset_cfg is None:
                 continue
             # resolve regex
             asset_cfg.prim_path = asset_cfg.prim_path.format(ENV_REGEX_NS=self.env_regex_ns)
@@ -342,6 +342,14 @@ class InteractiveScene:
             elif isinstance(asset_cfg, RigidObjectCfg):
                 self.rigid_objects[asset_name] = asset_cfg.class_type(asset_cfg)
             elif isinstance(asset_cfg, SensorBaseCfg):
+                # Update target frame path(s)' regex name space for FrameTransformer
+                if isinstance(asset_cfg, FrameTransformerCfg):
+                    updated_target_frames = []
+                    for target_frame in asset_cfg.target_frames:
+                        target_frame.prim_path = target_frame.prim_path.format(ENV_REGEX_NS=self.env_regex_ns)
+                        updated_target_frames.append(target_frame)
+                    asset_cfg.target_frames = updated_target_frames
+
                 self.sensors[asset_name] = asset_cfg.class_type(asset_cfg)
             elif isinstance(asset_cfg, AssetBaseCfg):
                 # manually spawn asset

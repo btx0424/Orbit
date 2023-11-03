@@ -1,3 +1,8 @@
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 """
 Script to run an environment with a pick and lift state machine.
 
@@ -42,8 +47,8 @@ import warp as wp
 
 from omni.isaac.orbit.utils.timer import Timer
 
-import omni.isaac.orbit_envs  # noqa: F401
-from omni.isaac.orbit_envs.utils.parse_cfg import parse_env_cfg
+import omni.isaac.orbit_tasks  # noqa: F401
+from omni.isaac.orbit_tasks.utils.parse_cfg import parse_env_cfg
 
 # initialize warp
 wp.init()

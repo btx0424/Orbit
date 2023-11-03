@@ -1,8 +1,7 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES, ETH Zurich, and University of Toronto
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
-
 
 """Curriculum manager for updating environment quantities subject to a training curriculum."""
 
@@ -16,7 +15,7 @@ from .manager_base import ManagerBase
 from .manager_cfg import CurriculumTermCfg
 
 if TYPE_CHECKING:
-    from omni.isaac.orbit.envs import RLEnv
+    from omni.isaac.orbit.envs import RLTaskEnv
 
 
 class CurriculumManager(ManagerBase):
@@ -30,10 +29,10 @@ class CurriculumManager(ManagerBase):
     parameters. Each curriculum term should instantiate the :class:`CurriculumTermCfg` class.
     """
 
-    _env: RLEnv
+    _env: RLTaskEnv
     """The environment instance."""
 
-    def __init__(self, cfg: object, env: RLEnv):
+    def __init__(self, cfg: object, env: RLTaskEnv):
         """Initialize the manager.
 
         Args:

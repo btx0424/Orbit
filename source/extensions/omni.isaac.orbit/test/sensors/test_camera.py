@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES, ETH Zurich, and University of Toronto
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -23,6 +23,7 @@ import numpy as np
 import os
 import random
 import scipy.spatial.transform as tf
+import torch
 import traceback
 import unittest
 
@@ -83,6 +84,7 @@ class TestCamera(unittest.TestCase):
         self.sim._timeline.stop()
         # clear the stage
         self.sim.clear()
+        self.sim.clear_all_callbacks()
         self.sim.clear_instance()
 
     """
@@ -245,7 +247,7 @@ class TestCamera(unittest.TestCase):
         # play sim
         self.sim.reset()
         # set new pose
-        camera.set_world_poses([POSITION], [QUAT_WORLD], convention="world")
+        camera.set_world_poses(torch.tensor([POSITION]), torch.tensor([QUAT_WORLD]), convention="world")
         np.testing.assert_allclose(camera.data.pos_w, [POSITION], rtol=1e-5)
         np.testing.assert_allclose(camera.data.quat_w_world, [QUAT_WORLD], rtol=1e-5)
 
@@ -255,7 +257,7 @@ class TestCamera(unittest.TestCase):
         # play sim
         self.sim.reset()
         # set new pose
-        camera.set_world_poses_from_view([POSITION], [[0.0, 0.0, 0.0]])
+        camera.set_world_poses_from_view(torch.tensor([POSITION]), torch.tensor([[0.0, 0.0, 0.0]]))
         np.testing.assert_allclose(camera.data.pos_w, [POSITION], rtol=1e-5)
         np.testing.assert_allclose(camera.data.quat_w_ros, [QUAT_ROS], rtol=1e-5)
 
@@ -307,7 +309,7 @@ class TestCamera(unittest.TestCase):
         # Play simulator
         self.sim.reset()
         # Set camera pose
-        camera.set_world_poses_from_view([2.5, 2.5, 2.5], [0.0, 0.0, 0.0])
+        camera.set_world_poses_from_view(torch.tensor([[2.5, 2.5, 2.5]]), torch.tensor([[0.0, 0.0, 0.0]]))
         # Simulate for a few steps
         # note: This is a workaround to ensure that the textures are loaded.
         #   Check "Known Issues" section in the documentation for more details.

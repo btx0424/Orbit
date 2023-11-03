@@ -1,8 +1,7 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES, ETH Zurich, and University of Toronto
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
-
 
 """Randomization manager for randomizing different elements in the scene."""
 
@@ -18,7 +17,7 @@ from .manager_base import ManagerBase
 from .manager_cfg import RandomizationTermCfg
 
 if TYPE_CHECKING:
-    from omni.isaac.orbit.envs import RLEnv
+    from omni.isaac.orbit.envs import RLTaskEnv
 
 
 class RandomizationManager(ManagerBase):
@@ -50,10 +49,10 @@ class RandomizationManager(ManagerBase):
 
     """
 
-    _env: RLEnv
+    _env: RLTaskEnv
     """The environment instance."""
 
-    def __init__(self, cfg: object, env: RLEnv):
+    def __init__(self, cfg: object, env: RLTaskEnv):
         """Initialize the randomization manager.
 
         Args:

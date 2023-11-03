@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES, ETH Zurich, and University of Toronto
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -15,7 +15,7 @@ from omni.isaac.orbit.assets.articulation import Articulation
 from omni.isaac.orbit.managers.action_manager import ActionTerm
 
 if TYPE_CHECKING:
-    from omni.isaac.orbit.envs.rl_env import BaseEnv
+    from omni.isaac.orbit.envs import BaseEnv
 
     from . import actions_cfg
 

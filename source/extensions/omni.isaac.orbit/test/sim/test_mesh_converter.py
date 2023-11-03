@@ -1,5 +1,4 @@
-# Copyright [2023] Boston Dynamics AI Institute, Inc.
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES, ETH Zurich, and University of Toronto
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -86,8 +85,6 @@ class TestMeshConverter(unittest.TestCase):
         mesh_config = MeshConverterCfg(asset_path=self.assets["obj"])
         mesh_converter = MeshConverter(mesh_config)
         time_usd_file_created = os.stat(mesh_converter.usd_path).st_mtime_ns
-
-        omni.usd.get_context().close_stage()
 
         # change the config
         new_config = mesh_config

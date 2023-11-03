@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES, ETH Zurich, and University of Toronto
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -36,6 +36,8 @@ class TestSpawningSensors(unittest.TestCase):
 
     def setUp(self) -> None:
         """Create a blank new stage for each test."""
+        # Create a new stage
+        stage_utils.create_new_stage()
         # Simulation time-step
         self.dt = 0.1
         # Load kit helper
@@ -50,6 +52,8 @@ class TestSpawningSensors(unittest.TestCase):
         # stop simulation
         self.sim.stop()
         self.sim.clear()
+        self.sim.clear_all_callbacks()
+        self.sim.clear_instance()
 
     """
     Basic spawning.

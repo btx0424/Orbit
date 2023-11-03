@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES, ETH Zurich, and University of Toronto
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -41,24 +41,24 @@ import carb
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import VecNormalize
 
-import omni.isaac.contrib_envs  # noqa: F401
-import omni.isaac.orbit_envs  # noqa: F401
-from omni.isaac.orbit_envs.utils.parse_cfg import parse_env_cfg
-from omni.isaac.orbit_envs.utils.wrappers.sb3 import Sb3VecEnvWrapper
-
-from config import parse_sb3_cfg
+import omni.isaac.contrib_tasks  # noqa: F401
+import omni.isaac.orbit_tasks  # noqa: F401
+from omni.isaac.orbit_tasks.utils.parse_cfg import load_cfg_from_registry, parse_env_cfg
+from omni.isaac.orbit_tasks.utils.wrappers.sb3 import Sb3VecEnvWrapper, process_sb3_cfg
 
 
 def main():
     """Play with stable-baselines agent."""
     # parse configuration
     env_cfg = parse_env_cfg(args_cli.task, use_gpu=not args_cli.cpu, num_envs=args_cli.num_envs)
+    agent_cfg = load_cfg_from_registry(args_cli.task, "sb3_cfg_entry_point")
+    # post-process agent configuration
+    agent_cfg = process_sb3_cfg(agent_cfg)
+
     # create isaac environment
     env = gym.make(args_cli.task, cfg=env_cfg)
     # wrap around environment for stable baselines
     env = Sb3VecEnvWrapper(env)
-    # parse agent configuration
-    agent_cfg = parse_sb3_cfg(args_cli.task)
 
     # normalize environment (if needed)
     if "normalize_input" in agent_cfg:

@@ -1,6 +1,112 @@
 Changelog
 ---------
 
+0.9.34 (2023-11-02)
+~~~~~~~~~~~~~~~~~~~
+
+Fixed
+^^^^^
+
+* Added missing import of ``from __future__ import annotations`` in the :mod:`omni.isaac.orbit.utils.warp`
+  module. This is needed to have a consistent behavior across Python versions.
+
+
+0.9.33 (2023-11-02)
+~~~~~~~~~~~~~~~~~~~
+
+Fixed
+^^^^^
+
+* Fixed the :class:`omni.isaac.orbit.command_generators.NullCommandGenerator` class. Earlier,
+  it was having a runtime error due to infinity in the resampling time range. Now, the class just
+  overrides the parent methods to perform no operations.
+
+
+0.9.32 (2023-11-02)
+~~~~~~~~~~~~~~~~~~~
+
+Changed
+^^^^^^^
+
+* Renamed the :class:`omni.isaac.orbit.envs.RLEnv` class to :class:`omni.isaac.orbit.envs.RLTaskEnv` to
+  avoid confusions in terminologies between environments and tasks.
+
+
+0.9.31 (2023-11-02)
+~~~~~~~~~~~~~~~~~~~
+
+Added
+^^^^^
+
+* Added the :class:`omni.isaac.orbit.sensors.RayCasterCamera` class, as a ray-casting based camera for
+  "distance_to_camera", "distance_to_image_plane" and "normals" annotations. It has the same interface and
+  functionalities as the USD Camera while it is on average 30% faster.
+
+
+0.9.30 (2023-11-01)
+~~~~~~~~~~~~~~~~~~~
+
+Fixed
+^^^^^
+
+* Added skipping of None values in the :class:`InteractiveScene` class when creating the scene from configuration
+  objects. Earlier, it was throwing an error when the user passed a None value for a scene element.
+* Added ``kwargs`` to the :class:`RLEnv` class to allow passing additional arguments from gym registry function.
+  This is now needed since the registry function passes args beyond the ones specified in the constructor.
+
+
+0.9.29 (2023-11-01)
+~~~~~~~~~~~~~~~~~~~
+
+Fixed
+^^^^^
+
+* Fixed the material path resolution inside the :class:`omni.isaac.orbit.sim.converters.UrdfConverter` class.
+  With Isaac Sim 2023.1, the material paths from the importer are always saved as absolute paths. This caused
+  issues when the generated USD file was moved to a different location. The fix now resolves the material paths
+  relative to the USD file location.
+
+
+0.9.28 (2023-11-01)
+~~~~~~~~~~~~~~~~~~~
+
+Changed
+^^^^^^^
+
+* Changed the way the :func:`omni.isaac.orbit.sim.spawners.from_files.spawn_ground_plane` function sets the
+  height of the ground. Earlier, it was reading the height from the configuration object. Now, it expects the
+  desired transformation as inputs to the function. This makes it consistent with the other spawner functions.
+
+
+0.9.27 (2023-10-31)
+~~~~~~~~~~~~~~~~~~~
+
+Changed
+^^^^^^^
+
+* Removed the default value of the argument ``camel_case`` in setters of USD attributes. This is to avoid
+  confusion with the naming of the attributes in the USD file.
+
+Fixed
+^^^^^
+
+* Fixed the selection of material prim in the :class:`omni.isaac.orbit.sim.spawners.materials.spawn_preview_surface`
+  method. Earlier, the created prim was being selected in the viewport which interfered with the selection of
+  prims by the user.
+* Updated :class:`omni.isaac.orbit.sim.converters.MeshConverter` to use a different stage than the default stage
+  for the conversion. This is to avoid the issue of the stage being closed when the conversion is done.
+
+
+0.9.26 (2023-10-31)
+~~~~~~~~~~~~~~~~~~~
+
+Added
+^^^^^
+
+* Added the sensor implementation for :class:`omni.isaac.orbit.sensors.FrameTransformer` class. Currently,
+  it handles obtaining the transformation between two frames in the same articulation.
+
+
 0.9.25 (2023-10-27)
 ~~~~~~~~~~~~~~~~~~~
 
@@ -91,7 +197,6 @@ Added
 
 
 0.9.18 (2023-10-23)
-~~~~~~~~~~~~~~~~~~~
 
 Added
 ^^^^^

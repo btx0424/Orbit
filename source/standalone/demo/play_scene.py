@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES, ETH Zurich, and University of Toronto
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -75,7 +75,6 @@ class MySceneCfg(InteractiveSceneCfg):
     light = AssetBaseCfg(
         prim_path="/World/light",
         spawn=sim_utils.DistantLightCfg(intensity=3000.0, color=(0.75, 0.75, 0.75)),
-        init_state=AssetBaseCfg.InitialStateCfg(pos=(0.0, 0.0, 500.0)),
     )
 
 

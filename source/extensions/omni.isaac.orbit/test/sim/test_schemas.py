@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES, ETH Zurich, and University of Toronto
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -19,6 +19,7 @@ import unittest
 
 import carb
 import omni.isaac.core.utils.prims as prim_utils
+import omni.isaac.core.utils.stage as stage_utils
 from omni.isaac.core.simulation_context import SimulationContext
 from pxr import UsdPhysics
 
@@ -32,6 +33,8 @@ class TestPhysicsSchema(unittest.TestCase):
 
     def setUp(self) -> None:
         """Create a blank new stage for each test."""
+        # Create a new stage
+        stage_utils.create_new_stage()
         # Simulation time-step
         self.dt = 0.1
         # Load kit helper
@@ -76,6 +79,8 @@ class TestPhysicsSchema(unittest.TestCase):
         # stop simulation
         self.sim.stop()
         self.sim.clear()
+        self.sim.clear_all_callbacks()
+        self.sim.clear_instance()
 
     def test_valid_properties_cfg(self):
         """Test that all the config instances have non-None values.

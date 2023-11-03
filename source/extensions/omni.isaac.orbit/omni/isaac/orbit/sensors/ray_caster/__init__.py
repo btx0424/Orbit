@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES, ETH Zurich, and University of Toronto
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -11,14 +11,19 @@ from __future__ import annotations
 
 from . import patterns
 from .ray_caster import RayCaster
+from .ray_caster_camera import RayCasterCamera
+from .ray_caster_camera_cfg import RayCasterCameraCfg
 from .ray_caster_cfg import RayCasterCfg
 from .ray_caster_data import RayCasterData
 
 __all__ = [
-    # sensor
+    # ray caster
     "RayCaster",
     "RayCasterData",
     "RayCasterCfg",
+    # camera
+    "RayCasterCameraCfg",
+    "RayCasterCamera",
     # patterns
     "patterns",
 ]

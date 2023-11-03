@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES, ETH Zurich, and University of Toronto
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -19,11 +19,11 @@ from omni.isaac.orbit.managers import SceneEntityCfg
 from omni.isaac.orbit.terrains import TerrainImporter
 
 if TYPE_CHECKING:
-    from omni.isaac.orbit.envs.rl_env import RLEnv
+    from omni.isaac.orbit.envs import RLTaskEnv
 
 
 def terrain_levels_vel(
-    env: RLEnv, env_ids: Sequence[int], asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")
+    env: RLTaskEnv, env_ids: Sequence[int], asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")
 ) -> torch.Tensor:
     """Curriculum based on the distance the robot walked when commanded to move at a desired velocity.
 
@@ -53,7 +53,7 @@ def terrain_levels_vel(
     return torch.mean(terrain.terrain_levels.float())
 
 
-def modify_reward_weight(env: RLEnv, env_ids: Sequence[int], term_name: str, weight: float, num_steps: int):
+def modify_reward_weight(env: RLTaskEnv, env_ids: Sequence[int], term_name: str, weight: float, num_steps: int):
     """Curriculum that modifies a reward weight a given number of steps.
 
     Args:

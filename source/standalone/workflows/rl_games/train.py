@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES, ETH Zurich, and University of Toronto
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -55,12 +55,10 @@ from rl_games.torch_runner import Runner
 from omni.isaac.orbit.utils.dict import print_dict
 from omni.isaac.orbit.utils.io import dump_pickle, dump_yaml
 
-import omni.isaac.contrib_envs  # noqa: F401
-import omni.isaac.orbit_envs  # noqa: F401
-from omni.isaac.orbit_envs.utils import parse_env_cfg
-from omni.isaac.orbit_envs.utils.wrappers.rl_games import RlGamesGpuEnv, RlGamesVecEnvWrapper
-
-from config import parse_rlg_cfg
+import omni.isaac.contrib_tasks  # noqa: F401
+import omni.isaac.orbit_tasks  # noqa: F401
+from omni.isaac.orbit_tasks.utils import load_cfg_from_registry, parse_env_cfg
+from omni.isaac.orbit_tasks.utils.wrappers.rl_games import RlGamesGpuEnv, RlGamesVecEnvWrapper
 
 
 def main():
@@ -70,7 +68,7 @@ def main():
 
     # parse configuration
     env_cfg = parse_env_cfg(args_cli.task, use_gpu=not args_cli.cpu, num_envs=args_cli.num_envs)
-    agent_cfg = parse_rlg_cfg(args_cli.task)
+    agent_cfg = load_cfg_from_registry(args_cli.task, "rl_games_cfg_entry_point")
     # override from command line
     if args_cli_seed is not None:
         agent_cfg["params"]["seed"] = args_cli_seed
@@ -80,7 +78,7 @@ def main():
     log_root_path = os.path.abspath(log_root_path)
     print(f"[INFO] Logging experiment in directory: {log_root_path}")
     # specify directory for logging runs
-    log_dir = agent_cfg["params"]["config"].get("full_experiment_name", datetime.now().strftime("%b%d_%H-%M-%S"))
+    log_dir = agent_cfg["params"]["config"].get("full_experiment_name", datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
     # set directory into agent config
     # logging directory path: <train_dir>/<full_experiment_name>
     agent_cfg["params"]["config"]["train_dir"] = log_root_path

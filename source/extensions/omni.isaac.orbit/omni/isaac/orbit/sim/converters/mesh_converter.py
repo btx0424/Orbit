@@ -1,5 +1,4 @@
-# Copyright [2023 Boston Dynamics AI Institute, Inc.
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES, ETH Zurich, and University of Toronto
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -106,12 +105,16 @@ class MeshConverter(AssetConverterBase):
             stage_or_context_kwargs = {}
         else:
             # create a new stage
-            stage = Usd.Stage.CreateNew(os.path.join(self.usd_dir, self.usd_instanceable_meshes_path))
+            stage = Usd.Stage.Open(self.usd_path)
             # add USD to stage cache
             stage_id = UsdUtils.StageCache.Get().Insert(stage)
             # need to make kwargs for compatibility with 2022
             stage_kwargs = {"stage": stage}
             stage_or_context_kwargs = {"stage_or_context": stage}
+            # FIXME: we need to hack this into command because Kit 105 has a bug.
+            from omni.usd.commands import MovePrimCommand
+
+            MovePrimCommand._selection = None  # type: ignore
         # Set stage up-axis to Z
         # note: later we need to rotate the mesh so that it is Z-up in the world
         UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.z)
@@ -162,7 +165,7 @@ class MeshConverter(AssetConverterBase):
                 mesh_collision_api.GetApproximationAttr().Set(cfg.collision_approximation)
                 # -- Collider properties such as offset, scale, etc.
                 schemas.define_collision_properties(
-                    prim_path=new_child_mesh_prim_path, cfg=cfg.collision_props, stage=stage
+                    prim_path=child_mesh_prim.GetPath(), cfg=cfg.collision_props, stage=stage
                 )
         # Delete the old Xform and make the new Xform the default prim
         stage.SetDefaultPrim(new_xform_prim)

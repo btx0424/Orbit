@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES, ETH Zurich, and University of Toronto
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -15,7 +15,6 @@ import omni.isaac.core.utils.prims as prim_utils
 import omni.isaac.core.utils.stage as stage_utils
 from omni.isaac.core.prims import XFormPrim
 
-# omni-isaac-orbit
 from omni.isaac.orbit.utils.math import convert_quat
 
 from ..sensor_base import SensorBase

@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 #==
 # Configurations
 #==
@@ -231,7 +236,7 @@ while [[ $# -gt 0 ]]; do
             echo "[INFO] Installing extra requirements such as learning frameworks..."
             python_exe=$(extract_python_exe)
             # install the rl-frameworks specified
-            ${python_exe} -m pip install -e ${ORBIT_PATH}/source/extensions/omni.isaac.orbit_envs[all]
+            ${python_exe} -m pip install -e ${ORBIT_PATH}/source/extensions/omni.isaac.orbit_tasks[all]
             shift # past argument
             ;;
         -c|--conda)
