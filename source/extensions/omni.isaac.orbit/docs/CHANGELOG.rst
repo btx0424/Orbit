@@ -1,6 +1,46 @@
 Changelog
 ---------
 
+0.9.38 (2023-11-07)
+~~~~~~~~~~~~~~~~~~~
+
+Changed
+^^^^^^^
+
+* Upgraded the :class:`omni.isaac.orbit.envs.RLTaskEnv` class to support Gym 0.29.0 environment definition.
+
+Added
+^^^^^
+
+* Added computation of ``time_outs`` and ``terminated`` signals inside the termination manager. These follow the
+  definition mentioned in `Gym 0.29.0 <https://gymnasium.farama.org/tutorials/gymnasium_basics/handling_time_limits/>`_.
+* Added proper handling of observation and action spaces in the :class:`omni.isaac.orbit.envs.RLTaskEnv` class.
+  These now follow closely to how Gym VecEnv handles the spaces.
+
+
+0.9.37 (2023-11-06)
+~~~~~~~~~~~~~~~~~~~
+
+Fixed
+^^^^^
+
+* Fixed broken visualization in :mod:`omni.isaac.orbit.sensors.FrameTramsformer` class by overwriting the
+  correct ``_debug_vis_callback`` function.
+* Moved the visualization marker configurations of sensors to their respective sensor configuration classes.
+  This allows users to set these configurations from the configuration object itself.
+
+
+0.9.36 (2023-11-03)
+~~~~~~~~~~~~~~~~~~~
+
+Fixed
+^^^^^
+
+* Added explicit deleting of different managers in the :class:`omni.isaac.orbit.envs.BaseEnv` and
+  :class:`omni.isaac.orbit.envs.RLTaskEnv` classes. This is required since deleting the managers
+  is order-sensitive (many managers need to be deleted before the scene is deleted).
+
+
 0.9.35 (2023-11-02)
 ~~~~~~~~~~~~~~~~~~~
 
