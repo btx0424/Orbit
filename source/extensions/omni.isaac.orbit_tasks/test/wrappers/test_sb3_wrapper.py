@@ -66,8 +66,6 @@ class TestStableBaselines3VecEnvWrapper(unittest.TestCase):
             omni.usd.get_context().new_stage()
             # parse configuration
             env_cfg: RLTaskEnvCfg = parse_env_cfg(task_name, use_gpu=self.use_gpu, num_envs=self.num_envs)
-            # note: we don't want to shutdown the app on stop during the tests since we reload the stage
-            env_cfg.sim.shutdown_app_on_stop = False
 
             # create environment
             env = gym.make(task_name, cfg=env_cfg)
@@ -83,7 +81,7 @@ class TestStableBaselines3VecEnvWrapper(unittest.TestCase):
             with torch.inference_mode():
                 for _ in range(1000):
                     # sample actions from -1 to 1
-                    actions = 2 * np.random.rand(env.num_envs, env.action_space.shape) - 1
+                    actions = 2 * np.random.rand(env.num_envs, *env.action_space.shape) - 1
                     # apply actions
                     transition = env.step(actions)
                     # check signals

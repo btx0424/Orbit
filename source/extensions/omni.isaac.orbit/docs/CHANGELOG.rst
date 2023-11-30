@@ -1,6 +1,222 @@
 Changelog
 ---------
 
+0.9.54 (2023-11-29)
+~~~~~~~~~~~~~~~~~~~
+
+Fixed
+^^^^^
+
+* Fixed pose computation in the :class:`omni.isaac.orbit.sensors.Camera` class to obtain them from XFormPrimView
+  instead of using ``UsdGeomCamera.ComputeLocalToWorldTransform`` method. The latter is not updated correctly
+  during GPU simulation.
+* Fixed initialization of the annotator info in the class :class:`omni.isaac.orbit.sensors.Camera`. Previously
+  all dicts had the same memory address which caused all annotators to have the same info.
+* Fixed the conversion of ``uint32`` warp arrays inside the :meth:`omni.isaac.orbit.utils.array.convert_to_torch`
+  method. PyTorch does not support this type, so it is converted to ``int32`` before converting to PyTorch tensor.
+* Added render call inside :meth:`omni.isaac.orbit.sim.SimulationContext.reset` to initialize Replicator
+  buffers when the simulation is reset.
+
+
+0.9.53 (2023-11-29)
+~~~~~~~~~~~~~~~~~~~
+
+Changed
+^^^^^^^
+
+* Changed the behavior of passing :obj:`None` to the :class:`omni.isaac.orbit.actuators.ActuatorBaseCfg`
+  class. Earlier, they were resolved to fixed default values. Now, they imply that the values are loaded
+  from the USD joint drive configuration.
+
+Added
+^^^^^
+
+* Added setting of joint armature and friction quantities to the articulation class.
+
+
+0.9.52 (2023-11-29)
+~~~~~~~~~~~~~~~~~~~
+
+Changed
+^^^^^^^
+
+* Changed the warning print in :meth:`omni.isaac.orbit.sim.utils.apply_nested` method
+  to be more descriptive. Earlier, it was printing a warning for every instanced prim.
+  Now, it only prints a warning if it could not apply the attribute to any of the prims.
+
+Added
+^^^^^
+
+* Added the method :meth:`omni.isaac.orbit.utils.assets.retrieve_file_path` to
+  obtain the absolute path of a file on the Nucleus server or locally.
+
+Fixed
+^^^^^
+
+* Fixed hiding of STOP button in the :class:`AppLauncher` class when running the
+  simulation in headless mode.
+* Fixed a bug with :meth:`omni.isaac.orbit.sim.utils.clone` failing when the input prim path
+  had no parent (example: "/Table").
+
+
+0.9.51 (2023-11-29)
+~~~~~~~~~~~~~~~~~~~
+
+Changed
+^^^^^^^
+
+* Changed the :meth:`omni.isaac.orbit.sensor.SensorBase.update` method to always recompute the buffers if
+  the sensor is in visualization mode.
+
+Added
+^^^^^
+
+* Added available entities to the error message when accessing a non-existent entity in the
+  :class:`InteractiveScene` class.
+* Added a warning message when the user tries to reference an invalid prim in the :class:`FrameTransformer` sensor.
+
+
+0.9.50 (2023-11-28)
+~~~~~~~~~~~~~~~~~~~
+
+Added
+^^^^^
+
+* Hid the ``STOP`` button in the UI when running standalone Python scripts. This is to prevent
+  users from accidentally clicking the button and stopping the simulation. They should only be able to
+  play and pause the simulation from the UI.
+
+Removed
+^^^^^^^
+
+* Removed :attr:`omni.isaac.orbit.sim.SimulationCfg.shutdown_app_on_stop`. The simulation is always rendering
+  if it is stopped from the UI. The user needs to close the window or press ``Ctrl+C`` to close the simulation.
+
+
+0.9.49 (2023-11-27)
+~~~~~~~~~~~~~~~~~~~
+
+Added
+^^^^^
+
+* Added an interface class, :class:`omni.isaac.orbit.managers.ManagerTermBase`, to serve as the parent class
+  for term implementations that are functional classes.
+* Adapted all managers to support terms that are classes and not just functions clearer. This allows the user to
+  create more complex terms that require additional state information.
+
+
+0.9.48 (2023-11-24)
+~~~~~~~~~~~~~~~~~~~
+
+Fixed
+^^^^^
+
+* Fixed initialization of drift in the :class:`omni.isaac.orbit.sensors.RayCasterCamera` class.
+
+
+0.9.47 (2023-11-24)
+~~~~~~~~~~~~~~~~~~~
+
+Fixed
+^^^^^
+
+* Automated identification of the root prim in the :class:`omni.isaac.orbit.assets.RigidObject` and
+  :class:`omni.isaac.orbit.assets.Articulation` classes. Earlier, the root prim was hard-coded to
+  the spawn prim path. Now, the class searches for the root prim under the spawn prim path.
+
+
+0.9.46 (2023-11-24)
+~~~~~~~~~~~~~~~~~~~
+
+Fixed
+^^^^^
+
+* Fixed a critical issue in the asset classes with writing states into physics handles.
+  Earlier, the states were written over all the indices instead of the indices of the
+  asset that were being updated. This caused the physics handles to refresh the states
+  of all the assets in the scene, which is not desirable.
+
+
+0.9.45 (2023-11-24)
+~~~~~~~~~~~~~~~~~~~
+
+Added
+^^^^^
+
+* Added :class:`omni.isaac.orbit.command_generators.UniformPoseCommandGenerator` to generate
+  poses in the asset's root frame by uniformly sampling from a given range.
+
+
+0.9.44 (2023-11-16)
+~~~~~~~~~~~~~~~~~~~
+
+Added
+^^^^^
+
+* Added methods :meth:`reset` and :meth:`step` to the :class:`omni.isaac.orbit.envs.BaseEnv`. This unifies
+  the environment interface for simple standalone applications with the class.
+
+
+0.9.43 (2023-11-16)
+~~~~~~~~~~~~~~~~~~~
+
+Fixed
+^^^^^
+
+* Replaced subscription of physics play and stop events in the :class:`omni.isaac.orbit.assets.AssetBase` and
+  :class:`omni.isaac.orbit.sensors.SensorBase` classes with subscription to time-line play and stop events.
+  This is to prevent issues in cases where physics first needs to perform mesh cooking and handles are not
+  available immediately. For instance, with deformable meshes.
+
+
+0.9.42 (2023-11-16)
+~~~~~~~~~~~~~~~~~~~
+
+Fixed
+^^^^^
+
+* Fixed setting of damping values from the configuration for :class:`ActuatorBase` class. Earlier,
+  the stiffness values were being set into damping when a dictionary configuration was passed to the
+  actuator model.
+* Added dealing with :class:`int` and :class:`float` values in the configurations of :class:`ActuatorBase`.
+  Earlier, a type-error was thrown when integer values were passed to the actuator model.
+
+
+0.9.41 (2023-11-16)
+~~~~~~~~~~~~~~~~~~~
+
+Fixed
+^^^^^
+
+* Fixed the naming and shaping issues in the binary joint action term.
+
+
+0.9.40 (2023-11-09)
+~~~~~~~~~~~~~~~~~~~
+
+Fixed
+^^^^^
+
+* Simplified the manual initialization of Isaac Sim :class:`ArticulationView` class. Earlier, we basically
+  copied the code from the Isaac Sim source code. Now, we just call their initialize method.
+
+Changed
+^^^^^^^
+
+* Changed the name of attribute :attr:`default_root_state_w` to :attr:`default_root_state`. The latter is
+  more correct since the data is actually in the local environment frame and not the simulation world frame.
+
+
+0.9.39 (2023-11-08)
+~~~~~~~~~~~~~~~~~~~
+
+Fixed
+^^^^^
+
+* Changed the reference of private `_body_view` variable inside the :class:`RigidObject` class
+  to the public `body_view` property. For a rigid object, the private variable is not defined.
+
+
 0.9.38 (2023-11-07)
 ~~~~~~~~~~~~~~~~~~~
 
@@ -607,7 +823,7 @@ Changed
 
 
 0.8.10 (2023-08-17)
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 Added
 ^^^^^

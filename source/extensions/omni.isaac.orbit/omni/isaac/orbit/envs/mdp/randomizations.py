@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-"""This sub-module contains the common functions that can be used to enable different randomizations.
+"""Common functions that can be used to enable different randomizations.
 
 Randomization includes anything related to altering the simulation state. This includes changing the physics
 materials, applying external forces, and resetting the state of the asset.
@@ -41,7 +41,7 @@ def randomize_rigid_body_material(
     uniform random values from the given ranges.
 
     The material properties are then assigned to the geometries of the asset. The assignment is done by
-    creating a random integer tensor of shape  ``(total_body_count, num_shapes)`` where ``total_body_count``
+    creating a random integer tensor of shape  (total_body_count, num_shapes) where ``total_body_count``
     is the number of assets spawned times the number of bodies per asset and ``num_shapes`` is the number of
     shapes per body. The integer values are used as indices to select the material properties from the
     material buckets.
@@ -169,14 +169,14 @@ def push_by_setting_velocity(
     asset.write_root_velocity_to_sim(vel_w, env_ids=env_ids)
 
 
-def reset_root_state(
+def reset_root_state_uniform(
     env: BaseEnv,
     env_ids: torch.Tensor,
     pose_range: dict[str, tuple[float, float]],
     velocity_range: dict[str, tuple[float, float]],
     asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
 ):
-    """Reset the asset root state to a random position and velocity within the given ranges.
+    """Reset the asset root state to a random position and velocity uniformly within the given ranges.
 
     This function randomizes the root position and velocity of the asset.
 
@@ -192,7 +192,7 @@ def reset_root_state(
     # extract the used quantities (to enable type-hinting)
     asset: RigidObject | Articulation = env.scene[asset_cfg.name]
     # get default root state
-    root_states = asset.data.default_root_state_w[env_ids].clone()
+    root_states = asset.data.default_root_state[env_ids].clone()
 
     # positions
     pos_offset = torch.zeros_like(root_states[:, 0:3])
@@ -240,6 +240,38 @@ def reset_joints_by_scale(
     # scale these values randomly
     joint_pos *= sample_uniform(*position_range, joint_pos.shape, joint_pos.device)
     joint_vel *= sample_uniform(*velocity_range, joint_vel.shape, joint_vel.device)
+    # clamp joint pos to limits
+    joint_pos_limits = asset.data.soft_joint_pos_limits[env_ids]
+    joint_pos = joint_pos.clamp_(joint_pos_limits[..., 0], joint_pos_limits[..., 1])
+
+    # set into the physics simulation
+    asset.write_joint_state_to_sim(joint_pos, joint_vel, env_ids=env_ids)
+
+
+def reset_joints_by_offset(
+    env: BaseEnv,
+    env_ids: torch.Tensor,
+    position_range: tuple[float, float],
+    velocity_range: tuple[float, float],
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+):
+    """Reset the robot joints with offsets around the default position and velocity by the given ranges.
+
+    This function samples random values from the given ranges and biases the default joint positions and velocities
+    by these values. The biased values are then set into the physics simulation.
+    """
+    # extract the used quantities (to enable type-hinting)
+    asset: Articulation = env.scene[asset_cfg.name]
+
+    # get default joint state
+    joint_pos = asset.data.default_joint_pos[env_ids].clone()
+    joint_vel = asset.data.default_joint_vel[env_ids].clone()
+    # bias these values randomly
+    joint_pos += sample_uniform(*position_range, joint_pos.shape, joint_pos.device)
+    joint_vel += sample_uniform(*velocity_range, joint_vel.shape, joint_vel.device)
+    # clamp joint pos to limits
+    joint_pos_limits = asset.data.soft_joint_pos_limits[env_ids]
+    joint_pos = joint_pos.clamp_(joint_pos_limits[..., 0], joint_pos_limits[..., 1])
 
     # set into the physics simulation
     asset.write_joint_state_to_sim(joint_pos, joint_vel, env_ids=env_ids)
@@ -247,15 +279,20 @@ def reset_joints_by_scale(
 
 def reset_scene_to_default(env: BaseEnv, env_ids: torch.Tensor):
     """Reset the scene to the default state specified in the scene configuration."""
-    # root states
-    for rigid_object in env.scene.rigid_objects.values() + env.scene.articulations.values():
+    # rigid bodies
+    for rigid_object in env.scene.rigid_objects.values():
         # obtain default and deal with the offset for env origins
-        default_root_state = rigid_object.data.default_root_state_w[env_ids].clone()
+        default_root_state = rigid_object.data.default_root_state[env_ids].clone()
         default_root_state[:, 0:3] += env.scene.env_origins[env_ids]
         # set into the physics simulation
         rigid_object.write_root_state_to_sim(default_root_state, env_ids=env_ids)
-    # joint states
+    # articulations
     for articulation_asset in env.scene.articulations.values():
+        # obtain default and deal with the offset for env origins
+        default_root_state = articulation_asset.data.default_root_state[env_ids].clone()
+        default_root_state[:, 0:3] += env.scene.env_origins[env_ids]
+        # set into the physics simulation
+        articulation_asset.write_root_state_to_sim(default_root_state, env_ids=env_ids)
         # obtain default joint positions
         default_joint_pos = articulation_asset.data.default_joint_pos[env_ids].clone()
         default_joint_vel = articulation_asset.data.default_joint_vel[env_ids].clone()

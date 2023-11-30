@@ -5,18 +5,15 @@
 
 from __future__ import annotations
 
-"""Wrapper around the Python 3.7 onwards `dataclasses` module."""
+"""Sub-module that provides a wrapper around the Python 3.7 onwards ``dataclasses`` module."""
 
+import inspect
 import sys
 from copy import deepcopy
 from dataclasses import MISSING, Field, dataclass, field, replace
 from typing import Any, Callable, ClassVar
 
 from .dict import class_to_dict, update_class_from_dict
-
-# List of all methods provided by sub-module.
-__all__ = ["configclass"]
-
 
 _CONFIGCLASS_METHODS = ["to_dict", "from_dict", "replace", "copy"]
 """List of class methods added at runtime to dataclass."""
@@ -35,41 +32,57 @@ def __dataclass_transform__():
 def configclass(cls, **kwargs):
     """Wrapper around `dataclass` functionality to add extra checks and utilities.
 
-    As of Python3.8, the standard dataclasses have two main issues which makes them non-generic for configuration use-cases.
-    These include:
+    As of Python 3.7, the standard dataclasses have two main issues which makes them non-generic for
+    configuration use-cases. These include:
 
     1. Requiring a type annotation for all its members.
     2. Requiring explicit usage of :meth:`field(default_factory=...)` to reinitialize mutable variables.
 
-    This function wraps around :class:`dataclass` utility to deal with the above two issues.
+    This function provides a decorator that wraps around Python's `dataclass`_ utility to deal with
+    the above two issues. It also provides additional helper functions for dictionary <-> class
+    conversion and easily copying class instances.
 
     Usage:
-        .. code-block:: python
 
-            from dataclasses import MISSING
+    .. code-block:: python
 
-            from omni.isaac.orbit.utils.configclass import configclass
+        from dataclasses import MISSING
 
-
-            @configclass
-            class ViewerCfg:
-                eye: list = [7.5, 7.5, 7.5]  # field missing on purpose
-                lookat: list = field(default_factory=[0.0, 0.0, 0.0])
+        from omni.isaac.orbit.utils.configclass import configclass
 
 
-            @configclass
-            class EnvCfg:
-                num_envs: int = MISSING
-                episode_length: int = 2000
-                viewer: ViewerCfg = ViewerCfg()
+        @configclass
+        class ViewerCfg:
+            eye: list = [7.5, 7.5, 7.5]  # field missing on purpose
+            lookat: list = field(default_factory=[0.0, 0.0, 0.0])
 
-            # create configuration instance
-            env_cfg = EnvCfg(num_envs=24)
-            # print information
-            print(env_cfg.to_dict())
 
-    Reference:
-        https://docs.python.org/3/library/dataclasses.html#dataclasses.Field
+        @configclass
+        class EnvCfg:
+            num_envs: int = MISSING
+            episode_length: int = 2000
+            viewer: ViewerCfg = ViewerCfg()
+
+        # create configuration instance
+        env_cfg = EnvCfg(num_envs=24)
+
+        # print information as a dictionary
+        print(env_cfg.to_dict())
+
+        # create a copy of the configuration
+        env_cfg_copy = env_cfg.copy()
+
+        # replace arbitrary fields using keyword arguments
+        env_cfg_copy = env_cfg_copy.replace(num_envs=32)
+
+    Args:
+        cls: The class to wrap around.
+        **kwargs: Additional arguments to pass to :func:`dataclass`.
+
+    Returns:
+        The wrapped class.
+
+    .. _dataclass: https://docs.python.org/3/library/dataclasses.html
     """
     # add type annotations
     _add_annotation_types(cls)
@@ -129,14 +142,16 @@ def _replace_class_with_kwargs(obj: object, **kwargs) -> object:
 
     This is especially useful for frozen classes.  Example usage:
 
-      @configclass(frozen=True)
-      class C:
-          x: int
-          y: int
+    .. code-block:: python
 
-      c = C(1, 2)
-      c1 = c.replace(x=3)
-      assert c1.x == 3 and c1.y == 2
+        @configclass(frozen=True)
+        class C:
+            x: int
+            y: int
+
+        c = C(1, 2)
+        c1 = c.replace(x=3)
+        assert c1.x == 3 and c1.y == 2
 
     Args:
         obj: The object to replace.
@@ -192,18 +207,13 @@ def _add_annotation_types(cls):
         # Note: Do not change this to dir(base) since it orders the members alphabetically.
         #   This is not desirable since the order of the members is important in some cases.
         for key in base.__dict__:
-            # skip dunder members
-            if key.startswith("__"):
-                continue
-            # skip class functions
-            if key in _CONFIGCLASS_METHODS:
-                continue
-            # check if key is already present
-            if key in hints:
+            # get class member
+            value = getattr(base, key)
+            # skip members
+            if _skippable_class_member(key, value, hints):
                 continue
             # add type annotations for members that don't have explicit type annotations
             # for these, we deduce the type from the default value
-            value = getattr(base, key)
             if not isinstance(value, type):
                 if key not in hints:
                     # check if var type is not MISSING
@@ -263,14 +273,11 @@ def _process_mutable_types(cls):
             continue
         # iterate over base class members
         for key in base.__dict__:
-            # skip dunder members
-            if key.startswith("__"):
-                continue
-            # skip class functions
-            if key in _CONFIGCLASS_METHODS:
-                continue
             # get class member
             f = getattr(base, key)
+            # skip members
+            if _skippable_class_member(key, f):
+                continue
             # store class member if it is not a type or if it is already present in annotations
             if not isinstance(f, type) or key in ann:
                 class_members[key] = f
@@ -354,6 +361,43 @@ def _combined_function(f1: Callable, f2: Callable) -> Callable:
 """
 Helper functions
 """
+
+
+def _skippable_class_member(key: str, value: Any, hints: dict | None = None) -> bool:
+    """Check if the class member should be skipped in configclass processing.
+
+    The following members are skipped:
+
+    * Dunder members: ``__name__``, ``__module__``, ``__qualname__``, ``__annotations__``, ``__dict__``.
+    * Manually-added special class functions: From :obj:`_CONFIGCLASS_METHODS`.
+    * Members that are already present in the type annotations.
+    * Functions bounded to class object or class.
+
+    Args:
+        key: The class member name.
+        value: The class member value.
+        hints: The type hints for the class. Defaults to None, in which case, the
+            members existence in type hints are not checked.
+
+    Returns:
+        True if the class member should be skipped, False otherwise.
+    """
+    # skip dunder members
+    if key.startswith("__"):
+        return True
+    # skip manually-added special class functions
+    if key in _CONFIGCLASS_METHODS:
+        return True
+    # check if key is already present
+    if hints is not None and key in hints:
+        return True
+    # skip functions bounded to class
+    if callable(value):
+        signature = inspect.signature(value)
+        if "self" in signature.parameters or "cls" in signature.parameters:
+            return True
+    # Otherwise, don't skip
+    return False
 
 
 def _return_f(f: Any) -> Callable[[], Any]:

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-"""This sub-module contains the common functions that can be used to enable reward functions.
+"""Common functions that can be used to enable reward functions.
 
 The functions can be passed to the :class:`omni.isaac.orbit.managers.RewardTermCfg` object to include
 the reward introduced by the function.
@@ -26,9 +26,14 @@ General.
 """
 
 
-def termination_penalty(env: RLTaskEnv) -> torch.Tensor:
+def is_alive(env: RLTaskEnv) -> torch.Tensor:
+    """Reward for being alive."""
+    return (~env.termination_manager.terminated).float()
+
+
+def is_terminated(env: RLTaskEnv) -> torch.Tensor:
     """Penalize terminated episodes that don't correspond to episodic timeouts."""
-    return env.reset_buf * (~env.termination_manager.time_outs)
+    return env.termination_manager.terminated.float()
 
 
 """
@@ -86,14 +91,21 @@ Joint penalties.
 
 
 def joint_torques_l2(env: RLTaskEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")) -> torch.Tensor:
-    """Penalize torques applied on the articulation using L2-kernel."""
+    """Penalize joint torques applied on the articulation using L2-kernel."""
     # extract the used quantities (to enable type-hinting)
     asset: Articulation = env.scene[asset_cfg.name]
     return torch.sum(torch.square(asset.data.applied_torque), dim=1)
 
 
+def joint_vel_l1(env: RLTaskEnv, asset_cfg: SceneEntityCfg) -> torch.Tensor:
+    """Penalize joint velocities on the articulation using an L1-kernel."""
+    # extract the used quantities (to enable type-hinting)
+    asset: Articulation = env.scene[asset_cfg.name]
+    return torch.sum(torch.abs(asset.data.joint_vel[:, asset_cfg.joint_ids]), dim=1)
+
+
 def joint_vel_l2(env: RLTaskEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")) -> torch.Tensor:
-    """Penalize joint velocities on the articulation."""
+    """Penalize joint velocities on the articulation using L2-kernel."""
     # extract the used quantities (to enable type-hinting)
     asset: Articulation = env.scene[asset_cfg.name]
     return torch.sum(torch.square(asset.data.joint_vel), dim=1)
@@ -163,6 +175,11 @@ def applied_torque_limits(env: RLTaskEnv, asset_cfg: SceneEntityCfg = SceneEntit
 def action_rate_l2(env: RLTaskEnv) -> torch.Tensor:
     """Penalize the rate of change of the actions using L2-kernel."""
     return torch.sum(torch.square(env.action_manager.action - env.action_manager.prev_action), dim=1)
+
+
+def action_l2(env: RLTaskEnv) -> torch.Tensor:
+    """Penalize the actions using L2-kernel."""
+    return torch.sum(torch.square(env.action_manager.action), dim=1)
 
 
 """

@@ -20,7 +20,7 @@ from .spawners.materials import RigidBodyMaterialCfg
 
 @configclass
 class PhysxCfg:
-    """PhysX solver parameters.
+    """Configuration for PhysX solver-related parameters.
 
     These parameters are used to configure the PhysX solver. For more information, see the PhysX 5 SDK
     documentation.
@@ -195,7 +195,7 @@ class SimulationCfg:
     functionality will not be available. However, this provides some performance speed-up.
 
     Note:
-        This flag is overridden to True inside the :class:`IsaacEnv` class when running the simulation
+        This flag is overridden to True inside the :class:`SimulationContext` class when running the simulation
         with the GUI enabled. This is to allow certain GUI features to work properly.
     """
 
@@ -233,7 +233,9 @@ class SimulationCfg:
     information can be expensive due to its combinatorial complexity. This flag allows disabling the contact
     processing and querying the contacts manually by the user over a limited set of primitives in the scene.
 
-    It is recommended to set this flag to :obj:`True` when using the TensorAPIs for contact reporting.
+    .. note::
+
+        It is required to set this flag to :obj:`True` when using the TensorAPIs for contact reporting.
     """
 
     use_gpu_pipeline: bool = True
@@ -255,14 +257,4 @@ class SimulationCfg:
     physics material specified on them.
 
     The material is created at the path: ``{physics_prim_path}/defaultMaterial``.
-    """
-
-    shutdown_app_on_stop: bool = True
-    """Enable/disable shutting down the application when the simulation is stopped. Default is True.
-
-    This flag is only used when running the simulation as a standalone application.
-
-    .. note::
-        When the simulation is stopped, the physics handles become invalidated. Thus, in the simplest case,
-        it is better to shutdown the application.
     """

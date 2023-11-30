@@ -9,8 +9,10 @@ import torch
 from typing import TYPE_CHECKING, Sequence
 
 import carb
+import omni.isaac.core.utils.prims as prim_utils
 import omni.physics.tensors.impl.api as physx
 from omni.isaac.core.prims import RigidPrimView
+from pxr import UsdPhysics
 
 import omni.isaac.orbit.utils.math as math_utils
 import omni.isaac.orbit.utils.string as string_utils
@@ -23,7 +25,28 @@ if TYPE_CHECKING:
 
 
 class RigidObject(AssetBase):
-    """Class for handling rigid objects."""
+    """A rigid object asset class.
+
+    Rigid objects are assets comprising of rigid bodies. They can be used to represent dynamic objects
+    such as boxes, spheres, etc. A rigid body is described by its pose, velocity and mass distribution.
+
+    For an asset to be considered a rigid object, the root prim of the asset must have the `USD RigidBodyAPI`_
+    applied to it. This API is used to define the simulation properties of the rigid body. On playing the
+    simulation, the physics engine will automatically register the rigid body and create a corresponding
+    rigid body handle. This handle can be accessed using the :attr:`root_physx_view` and :attr:`body_physx_view`
+    attributes. For a single rigid body asset, the :attr:`root_physx_view` and :attr:`body_physx_view` attributes
+    are the same. However, these are different for articulated assets as explained in the :class:`Articulation`
+    class.
+
+    .. note::
+
+        For users familiar with Isaac Sim, they can use the :attr:`root_view` and :attr:`body_view` attributes
+        to access the rigid body views. These views are wrappers around the PhysX rigid body handles. However,
+        for advanced users who have a deep understanding of PhysX SDK and TensorAPI, they can use the
+        :attr:`root_physx_view` and :attr:`body_physx_view` attributes to access the rigid body handles directly.
+
+    .. _`USD RigidBodyAPI`: https://openusd.org/dev/api/class_usd_physics_rigid_body_a_p_i.html
+    """
 
     cfg: RigidObjectCfg
     """Configuration instance for the rigid object."""
@@ -116,7 +139,7 @@ class RigidObject(AssetBase):
         """
         # write external wrench
         if self.has_external_wrench:
-            self._body_view._physics_view.apply_forces_and_torques_at_position(
+            self.body_physx_view.apply_forces_and_torques_at_position(
                 force_data=self._external_force_b.view(-1, 3),
                 torque_data=self._external_torque_b.view(-1, 3),
                 position_data=None,
@@ -135,9 +158,11 @@ class RigidObject(AssetBase):
     def find_bodies(self, name_keys: str | Sequence[str]) -> tuple[list[int], list[str]]:
         """Find bodies in the articulation based on the name keys.
 
+        Please check the :meth:`omni.isaac.orbit.utils.string_utils.resolve_matching_names` function for more
+        information on the name matching.
+
         Args:
-            name_keys: A regular expression or a list of regular expressions
-                to match the body names.
+            name_keys: A regular expression or a list of regular expressions to match the body names.
 
         Returns:
             A tuple of lists containing the body indices and names.
@@ -155,8 +180,8 @@ class RigidObject(AssetBase):
         and angular velocity. All the quantities are in the simulation frame.
 
         Args:
-            root_state: Root state in simulation frame. Shape is ``(len(env_ids), 13)``.
-            env_ids: Environment indices. If :obj:`None`, then all indices are used.
+            root_state: Root state in simulation frame. Shape is (len(env_ids), 13).
+            env_ids: Environment indices. If None, then all indices are used.
         """
         # set into simulation
         self.write_root_pose_to_sim(root_state[:, :7], env_ids=env_ids)
@@ -168,12 +193,14 @@ class RigidObject(AssetBase):
         The root pose comprises of the cartesian position and quaternion orientation in (w, x, y, z).
 
         Args:
-            root_pose: Root poses in simulation frame. Shape is ``(len(env_ids), 7)``.
-            env_ids: Environment indices. If :obj:`None`, then all indices are used.
+            root_pose: Root poses in simulation frame. Shape is (len(env_ids), 7).
+            env_ids: Environment indices. If None, then all indices are used.
         """
         # resolve all indices
+        physx_env_ids = env_ids
         if env_ids is None:
             env_ids = slice(None)
+            physx_env_ids = self._ALL_INDICES
         # note: we need to do this here since tensors are not set into simulation until step.
         # set into internal buffers
         self._data.root_state_w[env_ids, :7] = root_pose.clone()
@@ -181,23 +208,25 @@ class RigidObject(AssetBase):
         root_poses_xyzw = self._data.root_state_w[:, :7].clone()
         root_poses_xyzw[:, 3:] = math_utils.convert_quat(root_poses_xyzw[:, 3:], to="xyzw")
         # set into simulation
-        self.root_physx_view.set_transforms(root_poses_xyzw, indices=self._ALL_INDICES)
+        self.root_physx_view.set_transforms(root_poses_xyzw, indices=physx_env_ids)
 
     def write_root_velocity_to_sim(self, root_velocity: torch.Tensor, env_ids: Sequence[int] | None = None):
         """Set the root velocity over selected environment indices into the simulation.
 
         Args:
-            root_velocity: Root velocities in simulation frame. Shape is ``(len(env_ids), 6)``.
-            env_ids: Environment indices. If :obj:`None`, then all indices are used.
+            root_velocity: Root velocities in simulation frame. Shape is (len(env_ids), 6).
+            env_ids: Environment indices. If None, then all indices are used.
         """
         # resolve all indices
+        physx_env_ids = env_ids
         if env_ids is None:
             env_ids = slice(None)
+            physx_env_ids = self._ALL_INDICES
         # note: we need to do this here since tensors are not set into simulation until step.
         # set into internal buffers
         self._data.root_state_w[env_ids, 7:] = root_velocity.clone()
         # set into simulation
-        self.root_physx_view.set_velocities(self._data.root_state_w[:, 7:], indices=self._ALL_INDICES)
+        self.root_physx_view.set_velocities(self._data.root_state_w[:, 7:], indices=physx_env_ids)
 
     """
     Operations - Setters.
@@ -221,6 +250,7 @@ class RigidObject(AssetBase):
             of external wrench to the simulation.
 
             .. code-block:: python
+
                 # example of disabling external wrench
                 asset.set_external_force_and_torque(forces=torch.zeros(0, 3), torques=torch.zeros(0, 3))
 
@@ -229,8 +259,8 @@ class RigidObject(AssetBase):
             the desired values. To apply the external wrench, call the :meth:`write_data_to_sim` function.
 
         Args:
-            forces: External forces in bodies' local frame. Shape is ``(len(env_ids), len(body_ids), 3)``.
-            torques: External torques in bodies' local frame. Shape is ``(len(env_ids), len(body_ids), 3)``.
+            forces: External forces in bodies' local frame. Shape is (len(env_ids), len(body_ids), 3).
+            torques: External torques in bodies' local frame. Shape is (len(env_ids), len(body_ids), 3).
             body_ids: Body indices to apply external wrench to. Defaults to None (all bodies).
             env_ids: Environment indices to apply external wrench to. Defaults to None (all instances).
         """
@@ -266,11 +296,24 @@ class RigidObject(AssetBase):
     """
 
     def _initialize_impl(self):
+        # find articulation root prims
+        asset_prim_path = prim_utils.find_matching_prim_paths(self.cfg.prim_path)[0]
+        root_prims = prim_utils.get_all_matching_child_prims(
+            asset_prim_path, predicate=lambda a: prim_utils.get_prim_at_path(a).HasAPI(UsdPhysics.RigidBodyAPI)
+        )
+        if len(root_prims) != 1:
+            raise RuntimeError(
+                f"Failed to find a single rigid body when resolving '{self.cfg.prim_path}'."
+                f" Found multiple '{root_prims}' under '{asset_prim_path}'."
+            )
+        # resolve articulation root prim back into regex expression
+        root_prim_path = prim_utils.get_prim_path(root_prims[0])
+        root_prim_path_expr = self.cfg.prim_path + root_prim_path[len(asset_prim_path) :]
         # -- object views
-        self._root_view = RigidPrimView(self.cfg.prim_path, reset_xform_properties=False)
+        self._root_view = RigidPrimView(root_prim_path_expr, reset_xform_properties=False)
         self._root_view.initialize()
         # log information about the articulation
-        carb.log_info(f"Rigid body initialized at: {self.cfg.prim_path}")
+        carb.log_info(f"Rigid body initialized at: {self.cfg.prim_path} with root '{root_prim_path_expr}'.")
         carb.log_info(f"Number of bodies (orbit): {self.num_bodies}")
         carb.log_info(f"Body names (orbit): {self.body_names}")
         # create buffers
@@ -295,7 +338,7 @@ class RigidObject(AssetBase):
         self._data.body_names = self.body_names
         # -- root states
         self._data.root_state_w = torch.zeros(self.root_view.count, 13, device=self.device)
-        self._data.default_root_state_w = torch.zeros_like(self._data.root_state_w)
+        self._data.default_root_state = torch.zeros_like(self._data.root_state_w)
         # -- body states
         self._data.body_state_w = torch.zeros(self.root_view.count, self.num_bodies, 13, device=self.device)
         # -- post-computed
@@ -320,7 +363,7 @@ class RigidObject(AssetBase):
             + tuple(self.cfg.init_state.ang_vel)
         )
         default_root_state = torch.tensor(default_root_state, dtype=torch.float, device=self.device)
-        self._data.default_root_state_w = default_root_state.repeat(self.root_view.count, 1)
+        self._data.default_root_state = default_root_state.repeat(self.root_view.count, 1)
 
     def _update_common_data(self, dt: float):
         """Update common quantities related to rigid objects.

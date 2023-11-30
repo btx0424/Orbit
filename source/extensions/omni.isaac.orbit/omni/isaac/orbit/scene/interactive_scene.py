@@ -135,7 +135,7 @@ class InteractiveScene:
                 replicate_physics=False,
                 copy_from_source=True,
             )
-        self._default_env_origins = torch.tensor(env_origins, device=self.device)
+        self._default_env_origins = torch.tensor(env_origins, device=self.device, dtype=torch.float32)
         # add entities from config
         self._add_entities_from_cfg()
         # replicate physics if we have more than one environment
@@ -216,7 +216,7 @@ class InteractiveScene:
 
     @property
     def env_origins(self) -> torch.Tensor:
-        """The origins of the environments in the scene. Shape is ``(num_envs, 3)``."""
+        """The origins of the environments in the scene. Shape is (num_envs, 3)."""
         if self.terrain is not None:
             return self.terrain.env_origins
         else:
@@ -306,14 +306,17 @@ class InteractiveScene:
         # check if it is a terrain
         if key == "terrain":
             return self.terrain
+
+        all_keys = ["terrain"]
         # check if it is in other dictionaries
         for asset_family in [self.articulations, self.rigid_objects, self.sensors, self.extras]:
             out = asset_family.get(key)
             # if found, return
             if out is not None:
                 return out
+            all_keys += list(asset_family.keys())
         # if not found, raise error
-        raise KeyError(f"Scene entity with key '{key}' not found.")
+        raise KeyError(f"Scene entity with key '{key}' not found. Available Entities: '{all_keys}'")
 
     """
     Internal methods.
