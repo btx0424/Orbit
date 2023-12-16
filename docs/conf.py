@@ -71,6 +71,10 @@ source_suffix = {
     ".md": "markdown",
 }
 
+# make sure we don't have any unknown references
+# TODO: Enable this by default once we have fixed all the warnings
+# nitpicky = True
+
 # put type hints inside the signature instead of the description (easier to maintain)
 autodoc_typehints = "signature"
 # autodoc_typehints_format = "fully-qualified"
@@ -203,7 +207,7 @@ html_theme_options = {
     "show_toc_level": 1,
     "use_sidenotes": True,
     "logo": {
-        "text": f"orbit documentation",
+        "text": "orbit documentation",
         "image_light": "source/_static/NVIDIA-logo-white.png",
         "image_dark": "source/_static/NVIDIA-logo-black.png",
     },

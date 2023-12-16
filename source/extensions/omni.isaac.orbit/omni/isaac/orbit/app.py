@@ -305,14 +305,14 @@ class AppLauncher:
             "--livestream",
             type=int,
             default=AppLauncher._APPLAUNCHER_CFG_INFO["livestream"][1],
-            choices={-1, 0, 1, 2, 3},
+            choices={0, 1, 2, 3},
             help="Force enable livestreaming. Mapping corresponds to that for the `LIVESTREAM` environment variable.",
         )
         arg_group.add_argument(
             "--ros",
             type=int,
             default=AppLauncher._APPLAUNCHER_CFG_INFO["ros"][1],
-            choices={-1, 0, 1, 2},
+            choices={0, 1, 2},
             help="Enable ROS middleware. Mapping corresponds to that for the `ROS_ENABLED` environment variable",
         )
         arg_group.add_argument(
@@ -639,20 +639,24 @@ class AppLauncher:
             enable_extension("omni.kit.viewport.bundle")
             # extension for window status bar
             enable_extension("omni.kit.window.status_bar")
-        # enable isaac replicator extension
+        # enable replicator extension
         # note: moved here since it requires to have the viewport extension to be enabled first.
-        enable_extension("omni.replicator.isaac")
+        enable_extension("omni.replicator.core")
+        # enable UI tools
+        # note: we need to always import this even with headless to make
+        #   the module for orbit.envs.ui work
+        enable_extension("omni.isaac.ui")
 
         # set the nucleus directory manually to the 2023.1.0 version
         # TODO: Remove this once the 2023.1.0 version is released
         if int(isaacsim_version[2]) == 2023:
             carb_settings_iface.set_string(
                 "/persistent/isaac/asset_root/default",
-                "http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/2023.1.0",
+                "http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/2023.1.1",
             )
             carb_settings_iface.set_string(
                 "/persistent/isaac/asset_root/nvidia",
-                "http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets",
+                "http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/2023.1.1",
             )
 
     def _hide_stop_button(self):

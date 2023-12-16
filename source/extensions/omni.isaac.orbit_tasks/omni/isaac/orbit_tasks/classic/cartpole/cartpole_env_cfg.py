@@ -5,12 +5,8 @@
 
 import math
 
-from omni.isaac.orbit_assets import ORBIT_ASSETS_DATA_DIR
-
 import omni.isaac.orbit.sim as sim_utils
-from omni.isaac.orbit.actuators import ImplicitActuatorCfg
 from omni.isaac.orbit.assets import ArticulationCfg, AssetBaseCfg
-from omni.isaac.orbit.command_generators.command_generator_cfg import NullCommandGeneratorCfg
 from omni.isaac.orbit.envs import RLTaskEnvCfg
 from omni.isaac.orbit.managers import ObservationGroupCfg as ObsGroup
 from omni.isaac.orbit.managers import ObservationTermCfg as ObsTerm
@@ -24,13 +20,19 @@ from omni.isaac.orbit.utils import configclass
 import omni.isaac.orbit_tasks.classic.cartpole.mdp as mdp
 
 ##
+# Pre-defined configs
+##
+from omni.isaac.orbit.assets.config.cartpole import CARTPOLE_CFG  # isort:skip
+
+
+##
 # Scene definition
 ##
 
 
 @configclass
 class CartpoleSceneCfg(InteractiveSceneCfg):
-    """Configuration for the cartpole scene."""
+    """Configuration for a cart-pole scene."""
 
     # ground plane
     ground = AssetBaseCfg(
@@ -38,41 +40,9 @@ class CartpoleSceneCfg(InteractiveSceneCfg):
         spawn=sim_utils.GroundPlaneCfg(size=(100.0, 100.0)),
     )
 
-    # robots
-    robot = ArticulationCfg(
-        prim_path="{ENV_REGEX_NS}/Robot",
-        spawn=sim_utils.UsdFileCfg(
-            usd_path=f"{ORBIT_ASSETS_DATA_DIR}/Robots/Classic/Cartpole/cartpole.usd",
-            rigid_props=sim_utils.RigidBodyPropertiesCfg(
-                max_linear_velocity=1000.0,
-                max_angular_velocity=1000.0,
-                max_depenetration_velocity=100.0,
-                enable_gyroscopic_forces=True,
-            ),
-            articulation_props=sim_utils.ArticulationRootPropertiesCfg(
-                enabled_self_collisions=False,
-                solver_position_iteration_count=4,
-                solver_velocity_iteration_count=0,
-                sleep_threshold=0.005,
-                stabilization_threshold=0.001,
-            ),
-        ),
-        init_state=ArticulationCfg.InitialStateCfg(
-            pos=(0.0, 0.0, 2.0), joint_pos={"slider_to_cart": 0.0, "cart_to_pole": 0.0}
-        ),
-        actuators={
-            "cart_actuator": ImplicitActuatorCfg(
-                joint_names_expr=["slider_to_cart"],
-                effort_limit=400.0,
-                velocity_limit=100.0,
-                stiffness=0.0,
-                damping=10.0,
-            ),
-            "pole_actuator": ImplicitActuatorCfg(
-                joint_names_expr=["cart_to_pole"], effort_limit=400.0, velocity_limit=100.0, stiffness=0.0, damping=0.0
-            ),
-        },
-    )
+    # cartpole
+    robot: ArticulationCfg = CARTPOLE_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+
     # lights
     dome_light = AssetBaseCfg(
         prim_path="/World/DomeLight",
@@ -88,6 +58,14 @@ class CartpoleSceneCfg(InteractiveSceneCfg):
 ##
 # MDP settings
 ##
+
+
+@configclass
+class CommandsCfg:
+    """Command terms for the MDP."""
+
+    # no commands for this MDP
+    null = mdp.NullCommandCfg()
 
 
 @configclass
@@ -211,8 +189,9 @@ class CartpoleEnvCfg(RLTaskEnvCfg):
     rewards: RewardsCfg = RewardsCfg()
     terminations: TerminationsCfg = TerminationsCfg()
     # No command generator
-    commands: NullCommandGeneratorCfg = NullCommandGeneratorCfg()
+    commands: CommandsCfg = CommandsCfg()
 
+    # Post initialization
     def __post_init__(self) -> None:
         """Post initialization."""
         # general settings
