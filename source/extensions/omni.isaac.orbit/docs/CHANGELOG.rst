@@ -1,6 +1,57 @@
 Changelog
 ---------
 
+0.10.7 (2023-12-19)
+~~~~~~~~~~~~~~~~~~~
+
+Fixed
+^^^^^
+
+* Added a check to ray-cast and camera sensor classes to ensure that the sensor prim path does not
+  have a regex expression at its leaf. For instance, ``/World/Robot/camera_.*`` is not supported
+  for these sensor types. This behavior needs to be fixed in the future.
+
+
+0.10.6 (2023-12-19)
+~~~~~~~~~~~~~~~~~~~
+
+Added
+^^^^^
+
+* Added support for using articulations as visualization markers. This disables all physics APIs from
+  the articulation and allows the user to use it as a visualization marker. It is useful for creating
+  visualization markers for the end-effectors or base of the robot.
+
+Fixed
+^^^^^
+
+* Fixed hiding of debug markers from secondary images when using the
+  :class:`omni.isaac.orbit.markers.VisualizationMarkers` class. Earlier, the properties were applied on
+  the XForm prim instead of the Mesh prim.
+
+
+0.10.5 (2023-12-18)
+~~~~~~~~~~~~~~~~~~~
+
+Fixed
+^^^^^
+
+* Fixed test ``check_base_env_anymal_locomotion.py``, which
+  previously called :func:`torch.jit.load` with the path to a policy (which would work
+  for a local file), rather than calling
+  :func:`omni.isaac.orbit.utils.assets.read_file` on the path to get the file itself.
+
+
+0.10.4 (2023-12-14)
+~~~~~~~~~~~~~~~~~~~
+
+Fixed
+^^^^^
+
+* Fixed potentially breaking import of omni.kit.widget.toolbar by ensuring that
+  if live-stream is enabled, then the :mod:`omni.kit.widget.toolbar`
+  extension is loaded.
+
 0.10.3 (2023-12-12)
 ~~~~~~~~~~~~~~~~~~~
 
@@ -538,6 +589,7 @@ Added
 
 
 0.9.18 (2023-10-23)
+~~~~~~~~~~~~~~~~~~~
 
 Added
 ^^^^^
