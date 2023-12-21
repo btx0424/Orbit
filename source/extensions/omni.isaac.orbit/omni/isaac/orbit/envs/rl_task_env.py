@@ -99,6 +99,8 @@ class RLTaskEnv(BaseEnv, gym.Env):
         # print the environment information
         print("[INFO]: Completed setting up the environment...")
 
+        self.extras["episode_len"] = self.episode_length_buf.clone()
+
     """
     Properties.
     """
@@ -172,6 +174,8 @@ class RLTaskEnv(BaseEnv, gym.Env):
             self.scene.update(dt=self.physics_dt)
         # perform rendering if gui is enabled
         if self.sim.has_gui():
+            if self.cfg.viewer.func is not None:
+                self.sim.set_camera_view(*self.cfg.viewer.func(self))
             self.sim.render()
 
         # post-step:
@@ -219,6 +223,8 @@ class RLTaskEnv(BaseEnv, gym.Env):
                 or ``RenderMode.FULL_RENDERING``.
             NotImplementedError: If an unsupported rendering mode is specified.
         """
+        if self.cfg.viewer.func is not None:
+            self.sim.set_camera_view(self.cfg.viewer.func(self))
         # run a rendering step of the simulator
         self.sim.render()
         # decide the rendering mode
@@ -341,4 +347,5 @@ class RLTaskEnv(BaseEnv, gym.Env):
         self.extras["log"].update(info)
 
         # reset the episode length buffer
+        self.extras["episode_len"] = self.episode_length_buf.clone()
         self.episode_length_buf[env_ids] = 0

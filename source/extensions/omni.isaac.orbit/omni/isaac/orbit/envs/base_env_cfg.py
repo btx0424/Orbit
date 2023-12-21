@@ -38,6 +38,7 @@ class ViewerCfg:
     """The resolution (width, height) of the camera specified using :attr:`cam_prim_path`.
     Default is (1280, 720).
     """
+    func = None
 
 
 @configclass
