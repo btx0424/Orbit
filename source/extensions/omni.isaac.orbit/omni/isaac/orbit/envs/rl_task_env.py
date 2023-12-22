@@ -224,7 +224,7 @@ class RLTaskEnv(BaseEnv, gym.Env):
             NotImplementedError: If an unsupported rendering mode is specified.
         """
         if self.cfg.viewer.func is not None:
-            self.sim.set_camera_view(self.cfg.viewer.func(self))
+            self.sim.set_camera_view(*self.cfg.viewer.func(self))
         # run a rendering step of the simulator
         self.sim.render()
         # decide the rendering mode

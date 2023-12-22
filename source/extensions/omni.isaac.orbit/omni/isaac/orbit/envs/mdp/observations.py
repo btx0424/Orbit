@@ -54,6 +54,17 @@ def projected_gravity(env: BaseEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("
     asset: RigidObject = env.scene[asset_cfg.name]
     return asset.data.projected_gravity_b
 
+def body_pos_rel(env: BaseEnv):
+    asset: Articulation = env.scene["robot"]
+    # body_indices, _ = asset.find_bodies(".*_foot")
+    body_indices = [4, 8, 14, 18]
+    body_pos_w = asset.data.body_pos_w[:, body_indices]
+    body_pos_b = torch.vmap(math_utils.quat_rotate_inverse, in_dims=(None, 1), out_dims=1)(
+        asset.data.root_quat_w,
+        body_pos_w - asset.data.root_pos_w.unsqueeze(1),
+    )
+    return body_pos_b.reshape(env.num_envs, -1)
+    
 
 """
 Joint state.
@@ -81,6 +92,11 @@ def joint_vel_rel(env: BaseEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robo
     # extract the used quantities (to enable type-hinting)
     asset: Articulation = env.scene[asset_cfg.name]
     return asset.data.joint_vel - asset.data.default_joint_vel
+
+
+def joint_acc(env: BaseEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")):
+    asset: Articulation = env.scene[asset_cfg.name]
+    return asset.data.joint_acc
 
 
 """
