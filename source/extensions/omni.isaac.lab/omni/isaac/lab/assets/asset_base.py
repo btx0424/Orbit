@@ -70,20 +70,26 @@ class AssetBase(ABC):
         # note: currently the spawner does not work if there is a regex pattern in the leaf
         #   For example, if the prim path is "/World/Robot_[1,2]" since the spawner will not
         #   know which prim to spawn. This is a limitation of the spawner and not the asset.
-        asset_path = self.cfg.prim_path.split("/")[-1]
-        asset_path_is_regex = re.match(r"^[a-zA-Z0-9/_]+$", asset_path) is None
+        # asset_path = self.cfg.prim_path.split("/")[-1]
+        # asset_path_is_regex = re.match(r"^[a-zA-Z0-9/_]+$", asset_path) is None
         # spawn the asset
-        if self.cfg.spawn is not None and not asset_path_is_regex:
-            self.cfg.spawn.func(
-                self.cfg.prim_path,
-                self.cfg.spawn,
-                translation=self.cfg.init_state.pos,
-                orientation=self.cfg.init_state.rot,
-            )
-        # check that spawn was successful
-        matching_prims = sim_utils.find_matching_prims(self.cfg.prim_path)
-        if len(matching_prims) == 0:
-            raise RuntimeError(f"Could not find prim with path {self.cfg.prim_path}.")
+        
+        if isinstance(self.cfg.prim_path, str):
+            prim_paths = [self.cfg.prim_path]
+        else:
+            prim_paths = self.cfg.prim_path
+        if self.cfg.spawn is not None:
+            for prim_path in prim_paths:
+                self.cfg.spawn.func(
+                    prim_path,
+                    self.cfg.spawn,
+                    translation=self.cfg.init_state.pos,
+                    orientation=self.cfg.init_state.rot,
+                )
+            # check that spawn was successful
+            matching_prims = sim_utils.find_matching_prims(prim_path)
+            if len(matching_prims) == 0:
+                raise RuntimeError(f"Could not find prim with path {prim_path}.")
 
         # note: Use weakref on all callbacks to ensure that this object can be deleted when its destructor is called.
         # add callbacks for stage play/stop
