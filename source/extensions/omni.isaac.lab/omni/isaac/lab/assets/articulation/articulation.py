@@ -1144,6 +1144,7 @@ class Articulation(AssetBase):
                 effort_limit=self.root_physx_view.get_dof_max_forces().to(self.device).clone()[:, joint_ids],
                 velocity_limit=self.root_physx_view.get_dof_max_velocities().to(self.device).clone()[:, joint_ids],
             )
+            actuator.articulation = self
             # log information on actuator groups
             omni.log.info(
                 f"Actuator collection: {actuator_name} with model '{actuator_cfg.class_type.__name__}' and"
