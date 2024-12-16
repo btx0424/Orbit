@@ -96,6 +96,7 @@ class RigidObject(AssetBase):
     """
 
     def reset(self, env_ids: Sequence[int] | None = None):
+        return
         # resolve all indices
         if env_ids is None:
             env_ids = slice(None)
